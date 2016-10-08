@@ -86,14 +86,20 @@ void SubdivSurface::prepare() {
 
 
 void SubdivSurface::computePointFace() {
-  /* TODO : compute all point face (set the vector _pointFace : _pointFace[i] for the i-th face of _input).
-   * - input = Mesh *_input
-   * - _input->nbFace()
-   * - _input->nbVertex(i) : number of vertices of i-th face
-   * - _input->positionMesh(i,j) : the position of the j-th vertex of the i-th face
-   */
   _pointFace.clear();
 
+  //e3q1
+  for(int i = 0; i < _input->nbFace(); i++) {
+    int nbVertex = _input->nbVertexFace(i);
+    Vector3 averageVertex(0., 0., 0.);
+
+    for(int j = 0; j < nbVertex; j++) {
+      averageVertex += _input->positionVertexFace(i,j);
+    }
+    averageVertex /= nbVertex;
+
+    _pointFace.push_back(averageVertex);
+  }
 }
 
 void SubdivSurface::computePointEdge() {
