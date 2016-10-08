@@ -1,5 +1,6 @@
 #include "SubdivSurface.h"
 #include "GLTool.h"
+#include <algorithm>
 
 using namespace p3d;
 using namespace std;
@@ -96,6 +97,7 @@ void SubdivSurface::computePointFace() {
     for(int j = 0; j < nbVertex; j++) {
       averageVertex += _input->positionVertexFace(i,j);
     }
+
     averageVertex /= nbVertex;
 
     _pointFace.push_back(averageVertex);
@@ -108,31 +110,15 @@ void SubdivSurface::computePointEdge() {
   //e3q2
   for(int i = 0; i < _edge.size(); i++) {
     Vector3 averageVertex(0., 0., 0.);
-    int nbVertexLeft = 0;
-    int nbVertexRight = 0;
-
 
     //compute edges
     Edge e = _edge[i];
-    averageVertex += _input->positionVertexFace(e._left, e._a);
-    averageVertex += _input->positionVertexFace(e._left, e._b);
+    averageVertex += _input->positionMesh(e._a) + _input->positionMesh(e._b);
 
     //compute faces
-    if(e._left >= 0) {
-     nbVertexLeft = _input->nbVertexFace(e._left);
-      for(int j = 0; j < nbVertexLeft; j++) {
-        averageVertex += _input->positionVertexFace(e._left,j);
-      }
-    }
+    averageVertex += _pointFace[e._left] + _pointFace[e._right];
 
-    if(e._right >= 0) {
-      nbVertexRight = _input->nbVertexFace(e._right);
-      for(int j = 0; j < nbVertexRight; j++) {
-        averageVertex += _input->positionVertexFace(e._right,j);
-      }
-    }
-
-    averageVertex /= double(2 + nbVertexLeft + nbVertexRight);
+    averageVertex /= 4.;
 
     _pointEdge.push_back(averageVertex);
   }
@@ -146,6 +132,29 @@ void SubdivSurface::computePointVertex() {
    */
   _pointVertex.clear();
 
+  int nbPoints = _edgeOfVertex.size();
+
+  for(int i = 0; i < nbPoints; i++) {
+    int nbEdges = _edgeOfVertex[i].size();
+
+    Vector3 P = _input->positionMesh(i);
+    Vector3 F(0., 0., 0.);
+    Vector3 R(0., 0., 0.);
+
+    for(int j = 0; j < nbEdges; j++) {
+      Edge e = _edge[_edgeOfVertex[i][j]];
+
+      F += _pointFace[e._right];
+
+      R += (_input->positionMesh(e._a) + _input->positionMesh(e._b)) / 2.;
+    }
+
+    F /= double(nbEdges);
+    R /= double(nbEdges);
+    Vector3 averageVertex = (F + 2. * R + (nbEdges - 3.) * P) / nbEdges;
+
+    _pointVertex.push_back(averageVertex);
+  }
 }
 
 int SubdivSurface::findNextEdge(int i,int j) {
