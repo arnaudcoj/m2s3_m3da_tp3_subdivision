@@ -103,15 +103,39 @@ void SubdivSurface::computePointFace() {
 }
 
 void SubdivSurface::computePointEdge() {
-  /* TODO : compute all point face (set the vector _pointEdge : _pointEdge[i] for the i-th edge).
-   * input = Mesh *_input
-   * _edge[i]._a, _edge[i]._b : give the index of the two positions of i-th edge (._a and ._b are indexes for _input)
-   * _input->position(i) : the i-th position of input (as referred by ._a and ._b).
-   * _edge[i]._left, _edge[i]._right : indexes of the two faces incident to i-th face
-   * - _pointFace[i] : should give the point Face of the i-th face.
-   */
   _pointEdge.clear();
 
+  //e3q2
+  for(int i = 0; i < _edge.size(); i++) {
+    Vector3 averageVertex(0., 0., 0.);
+    int nbVertexLeft = 0;
+    int nbVertexRight = 0;
+
+
+    //compute edges
+    Edge e = _edge[i];
+    averageVertex += _input->positionVertexFace(e._left, e._a);
+    averageVertex += _input->positionVertexFace(e._left, e._b);
+
+    //compute faces
+    if(e._left >= 0) {
+     nbVertexLeft = _input->nbVertexFace(e._left);
+      for(int j = 0; j < nbVertexLeft; j++) {
+        averageVertex += _input->positionVertexFace(e._left,j);
+      }
+    }
+
+    if(e._right >= 0) {
+      nbVertexRight = _input->nbVertexFace(e._right);
+      for(int j = 0; j < nbVertexRight; j++) {
+        averageVertex += _input->positionVertexFace(e._right,j);
+      }
+    }
+
+    averageVertex /= double(2 + nbVertexLeft + nbVertexRight);
+
+    _pointEdge.push_back(averageVertex);
+  }
 }
 
 
