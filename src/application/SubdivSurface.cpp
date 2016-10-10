@@ -126,12 +126,9 @@ void SubdivSurface::computePointEdge() {
 
 
 void SubdivSurface::computePointVertex() {
-  /* TODO : compute all point vertex (set the vector _pointVertex : _pointVertex[i] for the i-th position).
-   * input = Mesh *_input
-   * - _edgeOfVertex[i][j] : gives the index (for the vector _edge) of the j-th edge of the i-th vertex
-   */
   _pointVertex.clear();
 
+  //e3q3
   int nbPoints = _edgeOfVertex.size();
 
   for(int i = 0; i < nbPoints; i++) {
@@ -171,8 +168,50 @@ void SubdivSurface::buildMesh() {
    *
    */
 
+  //e3q4
 
-  /* end TODO */
+  //add all the points previously created
+
+  int firstPtVertex = 0;
+  int nbPtVertex = _pointVertex.size();
+  for(Vector3 p : _pointVertex) {
+    m->addPositionMesh(p);
+  }
+
+  int firstPtEdge = nbPtVertex;
+  int nbPtEdge = _pointEdge.size();
+  for(Vector3 p : _pointEdge) {
+    m->addPositionMesh(p);
+  }
+
+  int firstPtFace = firstPtEdge + nbPtEdge;
+  int nbPtFace = _pointFace.size();
+  for(Vector3 p : _pointFace) {
+    m->addPositionMesh(p);
+  }
+
+  //add all the new faces
+
+  for(int i = 0; i < nbPtVertex; i++) {
+    int nbEdge = _edgeOfVertex[i].size();
+    for(int j = 0; j < nbEdge; j++) {
+        Edge e = _edge[_edgeOfVertex[i][j]];
+        int ip = i;
+        int ie1 = firstPtEdge + e._a;
+
+        int ifp;
+        if (i == e._a) {
+          ifp = firstPtFace + e._right;
+        } else {
+          ifp = firstPtFace + e._left;
+        }
+
+        int ie2 = firstPtEdge + e._b;
+
+        cout << i << " " << j << " -> " << ip << " " << ie1 << " " << ifp << " " << ie2 << endl;
+        m->addFaceMesh({ip, ie1, ifp, ie2});
+      }
+  }
 
 
   _result=m;
