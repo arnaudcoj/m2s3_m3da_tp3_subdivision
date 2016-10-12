@@ -161,12 +161,6 @@ int SubdivSurface::findNextEdge(int i,int j) {
 
 void SubdivSurface::buildMesh() {
   Mesh *m=new Mesh();
-  /* TODO : build the new mesh
-   * - m->addPositionMesh(aVector3) to add a vertex
-   * - m->addFaceMesh({v1,v2,v3,...}) to add a face : caution : v1,v2,v3,... are indexes (int) of the positions of m
-   * - caution with the indexes (indexes of m are not the same that the ones for _input : track them).
-   *
-   */
 
   //e3q4
 
@@ -196,19 +190,40 @@ void SubdivSurface::buildMesh() {
     int nbEdge = _edgeOfVertex[i].size();
     for(int j = 0; j < nbEdge; j++) {
         Edge e = _edge[_edgeOfVertex[i][j]];
-        int ip = i;
-        int ie1 = firstPtEdge + e._a;
 
+        //add the p vertex
+        int ip = i;
+
+        //add the current edge vertex
+        int ie1 = firstPtEdge + _edgeOfVertex[i][j];
+
+        int face_i;
         int ifp;
+
+        //select the correct face according to the direction of the edge
         if (i == e._a) {
-          ifp = firstPtFace + e._right;
+          face_i = e._right;
         } else {
-          ifp = firstPtFace + e._left;
+          face_i = e._left;
+        }
+        //add the face vertex
+        ifp = firstPtFace + face_i;
+
+        int ie2 = -1;
+
+        //search for an other edge incident to the selected face
+        for(int k = 0; k < nbEdge; k++) {
+          //if j == k it means that this is the same edge
+          if(j != k) {
+            Edge e2 = _edge[_edgeOfVertex[i][k]];
+            //if the edge is incident to the selected face, we add its vertex
+            if (face_i == e2._left || face_i == e2._right) {
+              ie2 = firstPtEdge + _edgeOfVertex[i][k];
+              break;
+            }
+          }
         }
 
-        int ie2 = firstPtEdge + e._b;
-
-        cout << i << " " << j << " -> " << ip << " " << ie1 << " " << ifp << " " << ie2 << endl;
         m->addFaceMesh({ip, ie1, ifp, ie2});
       }
   }
